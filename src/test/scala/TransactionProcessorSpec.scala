@@ -1,5 +1,4 @@
 import com.david.TransactionProcessor
-import com.david.TransactionsApp.{df, session}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{Matchers, WordSpec}
 
@@ -10,7 +9,7 @@ class TransactionProcessorSpec extends WordSpec with Matchers {
     val session = SparkSession.builder().master("local[*]").getOrCreate()
     session.sparkContext.setLogLevel("WARN")
 
-    val df = session.read.option("header",true).csv("src/main/resources/transactions.csv")
+    val df = session.read.option("header",true).csv("src/test/resources/transactions.csv")
 
     val processor = new TransactionProcessor(df, session)
 
@@ -19,7 +18,7 @@ class TransactionProcessorSpec extends WordSpec with Matchers {
     }
 
     "should find the top N days with more transactions" in {
-      processor.topN(3) should ===(List(("27/12/2018",776), ("11/06/2019",771), ("04/05/2019",758)))
+      processor.topN(3) should === (List(("11/06/2019",763), ("14/02/2019",763), ("04/05/2019",762)))
     }
 
     "find the days with zero transactions" in {
@@ -34,13 +33,13 @@ class TransactionProcessorSpec extends WordSpec with Matchers {
 
     "should give the top N hotels per month" in {
       val topHotels = processor.topHotelsPerMonth(3)
-      val expected = List(("2018/12",List(("Radisson Blue",676), ("Hilton",678), ("Eurostars",690))),
-        ("2019/01",List(("Ibis",2106), ("Radisson Blue",2122), ("Hilton",2161))),
-        ("2019/02",List(("NH",1833), ("Vertice",1835), ("Holiday Inn",1843))),
-        ("2019/03",List(("Eurostars",2005), ("Holiday Inn",2010), ("NH",2057))),
-        ("2019/04",List(("Vertice",1955), ("Melia",1980), ("NH",2001))),
-        ("2019/05",List(("Ibis",2026), ("Holiday Inn",2035), ("Melia",2044))),
-        ("2019/06",List(("Ibis",2014), ("NH",2045), ("Vertice",2087))),
+      val expected = List(("2018/12",List(("Hilton",684), ("Radisson Blue",685), ("Eurostars",695))),
+        ("2019/01",List(("Ibis",2109), ("Radisson Blue",2118), ("Hilton",2162))),
+        ("2019/02",List(("Vertice",1831), ("NH",1837), ("Holiday Inn",1841))),
+        ("2019/03",List(("Eurostars",2006), ("Holiday Inn",2012), ("NH",2052))),
+        ("2019/04",List(("Vertice",1961), ("Melia",1980), ("NH",2003))),
+        ("2019/05",List(("Ibis",2020), ("NH",2020), ("Holiday Inn",2033), ("Melia",2043))),
+        ("2019/06",List(("Ibis",2014), ("NH",2045), ("Vertice",2086))),
         ("2019/07",List(("Marriot",163), ("Hilton",175), ("NH",179))))
       topHotels should ===(expected)
     }
@@ -52,12 +51,12 @@ class TransactionProcessorSpec extends WordSpec with Matchers {
 
     "should give the average of transactions per hour" in {
       val transactionsPerHour = processor.getAverageTransactionsPerHour()
-      transactionsPerHour.take(3) should ===(List(("00",24.768845f), ("01",22.81407f), ("02",23.211056f)))
+      transactionsPerHour.take(3) should ===(List(("00",22.7f), ("01",23.095f), ("02",24.345f)))
     }
 
     "should give transactions per city per month" in {
       val transactionsPerHour = processor.getCityTransactionsPerMonth(6,3)
-      transactionsPerHour.take(1) should ===(List(("2019/02",List(("London",2341), ("Paris",2399), ("Budapest",2424)))))
+      transactionsPerHour.take(1) should ===(List(("2019/02",List(("London",2342), ("Paris",2395), ("Budapest",2414)))))
     }
   }
 }
